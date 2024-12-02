@@ -1,4 +1,4 @@
-from flask import Flask, request, make_response, Response
+from flask import Flask, request, make_response, Response, jsonify
 import json
 import time
 from chat import answer
@@ -9,7 +9,6 @@ import datetime
 app = Flask(__name__)
 api = Api(app)
     
-
 @app.route('/api/ask', methods=['POST'])
 def get_prompt_answer():
     data = json.loads(request.data)
@@ -21,17 +20,12 @@ def get_prompt_answer():
         return make_response("Empty prompt", 400)
 
     try:
-        output = answer(prompt)
+        response, data, extra = answer(prompt)
     except:
         return make_response("AI resources unavailable", 404)
 
-    def generate():
-        for chunk in output:
-            if chunk.choices and chunk.choices[0].delta.content:
-                delta_content = chunk.choices[0].delta.content
-                yield delta_content
                 
-    return Response(generate(), mimetype='text/event-stream') 
+    return jsonify({"response": response}), 200
 
 
 if __name__ == '__main__':
